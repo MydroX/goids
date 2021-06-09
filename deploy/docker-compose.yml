@@ -1,0 +1,19 @@
+version: "3.3"
+services: 
+  goids:
+    build:
+      args: 
+        WORK_DIR: /go/src/github.com/MydroX/goids
+    container_name: goids
+    ports:
+      - 8080:8080
+      - 80:3000
+    volumes: 
+      - ../.:/go/src/github.com/MydroX/goids
+    networks: 
+      - goids
+
+networks:
+  goids:
+    external: true
+  
