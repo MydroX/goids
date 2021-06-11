@@ -3,7 +3,7 @@ package window
 import (
 	"time"
 
-	"github.com/MydroX/goids/internal/frame"
+	"github.com/MydroX/goids/internal/borders"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
@@ -23,7 +23,7 @@ func Run() {
 	fps := time.NewTicker(time.Second / 60)
 	for !win.Closed() {
 		win.Clear(colornames.Grey)
-		frame.Borders().Draw(win)
+		borders.Borders().Draw(win)
 		win.Update()
 		<-fps.C
 	}
