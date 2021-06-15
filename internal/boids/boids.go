@@ -1,34 +1,23 @@
 package boids
 
 import (
-	"math"
 	"math/rand"
 
 	"github.com/MydroX/goids/internal/borders"
 	"github.com/MydroX/goids/tools"
+	"github.com/MydroX/goids/tools/trig"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 )
 
-type Vector struct {
-	X     float64
-	Y     float64
-	Angle float64
-}
-
-type Coordinates struct {
-	X float64
-	Y float64
-}
-
 type Boid struct {
 	Body            *imdraw.IMDraw
-	MovingDirection *Vector
+	MovingDirection *tools.Vector
 	Width           float64
 	Height          float64
 	X               float64
 	Y               float64
-	Vertex          *Coordinates
+	Vertex          *tools.Coordinates
 	Angle           float64 // Angle are saved in degrees
 }
 
@@ -39,7 +28,7 @@ func New(x float64, y float64, angle float64) Boid {
 	b.construct(x, y, angle)
 
 	//Initial movement
-	b.MovingDirection = &Vector{
+	b.MovingDirection = &tools.Vector{
 		X: 100,
 		Y: 0,
 	}
@@ -63,22 +52,8 @@ func (b *Boid) construct(originX float64, originY float64, angle float64) {
 	b.Body.Color = pixel.RGB(0, 0, 0)
 
 	//Find vertex
-	b.Vertex = &Coordinates{}
-	if b.Angle > math.Pi/2 && b.Angle < (math.Pi/2)+math.Pi {
-		b.Vertex.X = b.X - (math.Cos(b.Angle) * b.Height)
-	} else if b.Angle == math.Pi/2 || b.Angle == (math.Pi/2)+math.Pi {
-		b.Vertex.X = b.X
-	} else {
-		b.Vertex.X = b.X + (math.Cos(b.Angle) * b.Height)
-	}
-
-	if b.Angle > math.Pi && b.Angle < math.Pi*2 {
-		b.Vertex.Y = b.Y - (math.Sin(b.Angle) * b.Height)
-	} else if b.Angle == math.Pi || b.Angle == math.Pi*2 || b.Angle == 0 {
-		b.Vertex.Y = b.Y
-	} else {
-		b.Vertex.Y = b.Y + (math.Sin(b.Angle) * b.Height)
-	}
+	boidOrigin := tools.Coordinates{X: b.X, Y: b.Y}
+	b.Vertex = trig.FindPointFromPoint(boidOrigin, b.Angle, b.Height)
 }
 
 func (b *Boid) drawBoidBody(x float64, y float64) {
@@ -105,7 +80,7 @@ func (b *Boid) Move() {
 
 func (b *Boid) IsCollidingBorder() bool {
 	//Get triangle vertex
-	vertex := Coordinates{
+	vertex := tools.Coordinates{
 		X: b.X + b.Width,
 		Y: b.Y + (b.Height / 2),
 	}
