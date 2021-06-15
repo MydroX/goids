@@ -1,57 +1,131 @@
 package boids
 
 import (
+	"math"
+	"math/rand"
+
+	"github.com/MydroX/goids/internal/borders"
+	"github.com/MydroX/goids/tools"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 )
 
 type Vector struct {
+	X     float64
+	Y     float64
+	Angle float64
+}
+
+type Coordinates struct {
 	X float64
 	Y float64
 }
 
 type Boid struct {
-	Matrix *pixel.Matrix
-	Draw   *imdraw.IMDraw
-	Width  float64
-	Height float64
-	X      float64
-	Y      float64
+	Body            *imdraw.IMDraw
+	MovingDirection *Vector
+	Width           float64
+	Height          float64
+	X               float64
+	Y               float64
+	Vertex          *Coordinates
+	Angle           float64 // Angle are saved in degrees
 }
 
-func New(x float64, y float64) Boid {
+func New(x float64, y float64, angle float64) Boid {
 	b := Boid{}
 
 	// Construct
-	b.construct(x, y)
+	b.construct(x, y, angle)
+
+	//Initial movement
+	b.MovingDirection = &Vector{
+		X: 100,
+		Y: 0,
+	}
 
 	//Position
-	b.drawBoid(b.X, b.Y)
-
+	b.drawBoidBody(b.X, b.Y)
 	return b
 }
 
-func (b *Boid) construct(x float64, y float64) {
+func (b *Boid) construct(originX float64, originY float64, angle float64) {
 	b.Width = 18
 	b.Height = 14
-	b.X = x
-	b.Y = y
-	b.Draw = imdraw.New(nil)
-	b.Matrix = &pixel.Matrix{}
 
-	b.Draw.Color = pixel.RGB(0, 0, 0)
+	b.X = originX
+	b.Y = originY
+	b.Angle = angle
+
+	b.Angle = 0
+
+	b.Body = imdraw.New(nil)
+	b.Body.Color = pixel.RGB(0, 0, 0)
+
+	//Find vertex
+	b.Vertex = &Coordinates{}
+	if b.Angle > math.Pi/2 && b.Angle < (math.Pi/2)+math.Pi {
+		b.Vertex.X = b.X - (math.Cos(b.Angle) * b.Height)
+	} else if b.Angle == math.Pi/2 || b.Angle == (math.Pi/2)+math.Pi {
+		b.Vertex.X = b.X
+	} else {
+		b.Vertex.X = b.X + (math.Cos(b.Angle) * b.Height)
+	}
+
+	if b.Angle > math.Pi && b.Angle < math.Pi*2 {
+		b.Vertex.Y = b.Y - (math.Sin(b.Angle) * b.Height)
+	} else if b.Angle == math.Pi || b.Angle == math.Pi*2 || b.Angle == 0 {
+		b.Vertex.Y = b.Y
+	} else {
+		b.Vertex.Y = b.Y + (math.Sin(b.Angle) * b.Height)
+	}
 }
 
-func (b *Boid) drawBoid(x float64, y float64) {
-	b.Draw.Clear()
-	b.Draw.Push(pixel.V(x, y))
-	b.Draw.Push(pixel.V(x-b.Width, y+(-b.Height/2)))
-	b.Draw.Push(pixel.V(x-b.Width, y+b.Height/2))
-	b.Draw.Polygon(0)
+func (b *Boid) drawBoidBody(x float64, y float64) {
+	b.Body.Clear()
+
+	b.Body.Push(pixel.V(x, y))
+	b.Body.Push(pixel.V(x, y+b.Height))
+	b.Body.Push(pixel.V(x+b.Width, y+b.Height/2))
+	b.Body.Polygon(0)
 }
 
-func (b *Boid) Move(v Vector) {
-	b.X = b.X + v.X
-	b.Y = b.Y + v.Y
-	b.drawBoid(b.X, b.Y)
+func (b *Boid) Move() {
+	if b.IsCollidingBorder() {
+		b.MovingDirection.X = -b.MovingDirection.X
+	}
+
+	correctedSpeedX := b.MovingDirection.X * tools.DeltaTime
+	correctedSpeedY := b.MovingDirection.Y * tools.DeltaTime
+
+	b.X = b.X + correctedSpeedX
+	b.Y = b.Y + correctedSpeedY
+	b.drawBoidBody(b.X, b.Y)
+}
+
+func (b *Boid) IsCollidingBorder() bool {
+	//Get triangle vertex
+	vertex := Coordinates{
+		X: b.X + b.Width,
+		Y: b.Y + (b.Height / 2),
+	}
+	//
+	if vertex.X > borders.WindowWidth-borders.BordersWidth || vertex.X < borders.BordersWidth {
+		return true
+	} else {
+		return false
+	}
+}
+
+func Generator(boidsNumber int16) []Boid {
+	boids := make([]Boid, boidsNumber)
+
+	for i := 0; i < int(boidsNumber); i++ {
+		x := rand.Intn(borders.WindowWidth-borders.BordersWidth*2) + borders.BordersWidth*2
+		y := rand.Intn(borders.WindowHeight-borders.BordersWidth*2) + borders.BordersWidth*2
+		angle := float64(rand.Intn(360))
+
+		boids[i] = New(float64(x), float64(y), angle)
+	}
+	return boids
 }

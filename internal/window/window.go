@@ -5,6 +5,7 @@ import (
 
 	"github.com/MydroX/goids/internal/boids"
 	"github.com/MydroX/goids/internal/borders"
+	"github.com/MydroX/goids/tools"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
@@ -13,7 +14,7 @@ import (
 func Run() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Goids",
-		Bounds: pixel.R(0, 0, borders.Width, borders.Height),
+		Bounds: pixel.R(0, 0, borders.WindowWidth, borders.WindowHeight),
 		VSync:  true,
 	}
 	win, err := pixelgl.NewWindow(cfg)
@@ -22,28 +23,29 @@ func Run() {
 	}
 	canvas := win.Canvas()
 
-	boidsXCoordinates := []float64{100}
-	boidsYCoordinates := []float64{100}
+	borders := borders.New()
 
-	boid := boids.New(boidsXCoordinates[0], boidsYCoordinates[0])
+	boids := boids.Generator(1)
+	boid := boids[0]
 
 	lastTime := time.Now()
 	fps := time.NewTicker(time.Second / 60)
+
 	for !win.Closed() {
 		//Delta time
-		dt := time.Since(lastTime).Seconds()
+		tools.DeltaTime = time.Since(lastTime).Seconds()
 		lastTime = time.Now()
 
 		canvas.Clear(colornames.Grey)
 
 		// Draw borders
-		borders.Borders().Draw(canvas)
+		borders.Draw().Draw(canvas)
 
 		// Draw boids
-		boid.Draw.Draw(canvas)
+		boid.Body.Draw(canvas)
 
 		// Move 1st boid
-		boid.Move(boids.Vector{X: 100 * dt, Y: 0})
+		boid.Move()
 
 		win.Update()
 		<-fps.C

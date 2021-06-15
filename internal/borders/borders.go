@@ -6,16 +6,26 @@ import (
 )
 
 const (
-	Width  = 1200
-	Height = 768
+	WindowWidth  = 1200
+	WindowHeight = 768
+	BordersWidth = 15
 )
 
-func Borders() *imdraw.IMDraw {
+type Borders struct {
+	Width float64
+}
+
+func New() Borders {
+	return Borders{
+		Width: BordersWidth,
+	}
+}
+
+func (b *Borders) Draw() *imdraw.IMDraw {
 	imd := imdraw.New(nil)
 	imd.Color = pixel.RGB(240, 240, 240)
-	// imd.Color = pixel.Alpha(0)
-	imd.Push(pixel.V(15, 15))
-	imd.Push(pixel.V(Width-15, Height-15))
+	imd.Push(pixel.V(b.Width, b.Width))
+	imd.Push(pixel.V(WindowWidth-b.Width, WindowHeight-b.Width))
 	imd.Rectangle(0)
 	return imd
 }
