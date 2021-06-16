@@ -1,7 +1,9 @@
 package boids
 
 import (
+	"math"
 	"math/rand"
+	"time"
 
 	"github.com/MydroX/goids/internal/borders"
 	"github.com/MydroX/goids/tools"
@@ -15,10 +17,9 @@ type Boid struct {
 	MovingDirection *tools.Vector
 	Width           float64
 	Height          float64
-	X               float64
-	Y               float64
+	Origin          *tools.Coordinates
 	Vertex          *tools.Coordinates
-	Angle           float64 // Angle are saved in degrees
+	Angle           float64 // Angle are saved in radians
 }
 
 func New(x float64, y float64, angle float64) Boid {
@@ -34,73 +35,82 @@ func New(x float64, y float64, angle float64) Boid {
 	}
 
 	//Position
-	b.drawBoidBody(b.X, b.Y)
+	b.drawBoidBody()
 	return b
 }
 
 func (b *Boid) construct(originX float64, originY float64, angle float64) {
-	b.Width = 18
-	b.Height = 14
+	b.Width = 14
+	b.Height = 18
 
-	b.X = originX
-	b.Y = originY
+	b.Origin = &tools.Coordinates{}
+	b.Origin.X = originX
+	b.Origin.Y = originY
 	b.Angle = angle
-
-	b.Angle = 0
 
 	b.Body = imdraw.New(nil)
 	b.Body.Color = pixel.RGB(0, 0, 0)
 
 	//Find vertex
-	boidOrigin := tools.Coordinates{X: b.X, Y: b.Y}
-	b.Vertex = trig.FindPointFromPoint(boidOrigin, b.Angle, b.Height)
+	b.Vertex = trig.FindPointFromPoint(b.Origin, b.Angle, b.Height)
 }
 
-func (b *Boid) drawBoidBody(x float64, y float64) {
+func (b *Boid) drawBoidBody() {
 	b.Body.Clear()
 
-	b.Body.Push(pixel.V(x, y))
-	b.Body.Push(pixel.V(x, y+b.Height))
-	b.Body.Push(pixel.V(x+b.Width, y+b.Height/2))
+	angleSidePoint1 := (math.Pi / 2) + b.Angle
+	angleSidePoint2 := (math.Pi / 2) + math.Pi + b.Angle
+
+	sidePoint1 := trig.FindPointFromPoint(b.Origin, angleSidePoint1, b.Width/2)
+	sidePoint2 := trig.FindPointFromPoint(b.Origin, angleSidePoint2, b.Width/2)
+
+	b.Body.Push(pixel.V(b.Vertex.X, b.Vertex.Y), pixel.V(sidePoint1.X, sidePoint1.Y))
+	b.Body.Push(pixel.V(b.Vertex.X, b.Vertex.Y), pixel.V(sidePoint2.X, sidePoint2.Y))
+	b.Body.Push(pixel.V(sidePoint1.X, sidePoint1.Y), pixel.V(sidePoint2.X, sidePoint2.Y))
 	b.Body.Polygon(0)
 }
 
 func (b *Boid) Move() {
-	if b.IsCollidingBorder() {
-		b.MovingDirection.X = -b.MovingDirection.X
-	}
+	// if b.IsCollidingBorder() {
+	// 	b.MovingDirection.X = -b.MovingDirection.X
+	// }
 
 	correctedSpeedX := b.MovingDirection.X * tools.DeltaTime
 	correctedSpeedY := b.MovingDirection.Y * tools.DeltaTime
 
-	b.X = b.X + correctedSpeedX
-	b.Y = b.Y + correctedSpeedY
-	b.drawBoidBody(b.X, b.Y)
+	b.Origin.X = b.Origin.X + correctedSpeedX
+	b.Origin.Y = b.Origin.Y + correctedSpeedY
+	b.drawBoidBody()
 }
 
-func (b *Boid) IsCollidingBorder() bool {
-	//Get triangle vertex
-	vertex := tools.Coordinates{
-		X: b.X + b.Width,
-		Y: b.Y + (b.Height / 2),
-	}
-	//
-	if vertex.X > borders.WindowWidth-borders.BordersWidth || vertex.X < borders.BordersWidth {
-		return true
-	} else {
-		return false
-	}
-}
+// TO REWORK
+//
+// func (b *Boid) IsCollidingBorder() bool {
+// 	//Get triangle vertex
+// 	vertex := tools.Coordinates{
+// 		X: b.Origin.X + b.Width,
+// 		Y: b.Origin.Y + (b.Height / 2),
+// 	}
+
+// 	if vertex.X > borders.WindowWidth-borders.BordersWidth || vertex.X < borders.BordersWidth {
+// 		return true
+// 	}
+// 	return false
+// }
 
 func Generator(boidsNumber int16) []Boid {
 	boids := make([]Boid, boidsNumber)
+	seed := time.Now().UnixNano()
+	rand.Seed(seed)
 
 	for i := 0; i < int(boidsNumber); i++ {
 		x := rand.Intn(borders.WindowWidth-borders.BordersWidth*2) + borders.BordersWidth*2
 		y := rand.Intn(borders.WindowHeight-borders.BordersWidth*2) + borders.BordersWidth*2
-		angle := float64(rand.Intn(360))
 
-		boids[i] = New(float64(x), float64(y), angle)
+		angle := float64(rand.Intn(360))
+		angleRad := angle * (math.Pi / 180)
+
+		boids[i] = New(float64(x), float64(y), angleRad)
 	}
 	return boids
 }
