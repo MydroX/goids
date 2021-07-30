@@ -20,6 +20,24 @@ type Boid struct {
 	Origin          *tools.Coordinates
 	Vertex          *tools.Coordinates
 	Angle           float64 // Angle are saved in radians
+	Speed           uint8
+}
+
+func (b *Boid) construct(originX float64, originY float64, angle float64) {
+	b.Width = 16
+	b.Height = 20
+	b.Speed = 80
+
+	b.Origin = &tools.Coordinates{}
+	b.Origin.X = originX
+	b.Origin.Y = originY
+	b.Angle = angle
+
+	b.Body = imdraw.New(nil)
+	b.Body.Color = pixel.RGB(0, 0, 0)
+
+	//Find vertex
+	b.Vertex = trig.FindPointFromPoint(b.Origin, b.Angle, b.Height)
 }
 
 func New(x float64, y float64, angle float64) Boid {
@@ -39,48 +57,21 @@ func New(x float64, y float64, angle float64) Boid {
 	return b
 }
 
-func (b *Boid) construct(originX float64, originY float64, angle float64) {
-	b.Width = 14
-	b.Height = 18
-
-	b.Origin = &tools.Coordinates{}
-	b.Origin.X = originX
-	b.Origin.Y = originY
-	b.Angle = angle
-
-	b.Body = imdraw.New(nil)
-	b.Body.Color = pixel.RGB(0, 0, 0)
-
-	//Find vertex
-	b.Vertex = trig.FindPointFromPoint(b.Origin, b.Angle, b.Height)
+func (b *Boid) GetSidePoints() (leftPoint, rightPoint *tools.Coordinates) {
+	angleLeftSidePoint := (math.Pi / 2) + b.Angle
+	angleRightSidePoint := (math.Pi / 2) + math.Pi + b.Angle
+	return trig.FindPointFromPoint(b.Origin, angleLeftSidePoint, b.Width/2), trig.FindPointFromPoint(b.Origin, angleRightSidePoint, b.Width/2)
 }
 
 func (b *Boid) drawBoidBody() {
 	b.Body.Clear()
 
-	angleSidePoint1 := (math.Pi / 2) + b.Angle
-	angleSidePoint2 := (math.Pi / 2) + math.Pi + b.Angle
+	leftSidePoint, rightSidePoint := b.GetSidePoints()
 
-	sidePoint1 := trig.FindPointFromPoint(b.Origin, angleSidePoint1, b.Width/2)
-	sidePoint2 := trig.FindPointFromPoint(b.Origin, angleSidePoint2, b.Width/2)
-
-	b.Body.Push(pixel.V(b.Vertex.X, b.Vertex.Y), pixel.V(sidePoint1.X, sidePoint1.Y))
-	b.Body.Push(pixel.V(b.Vertex.X, b.Vertex.Y), pixel.V(sidePoint2.X, sidePoint2.Y))
-	b.Body.Push(pixel.V(sidePoint1.X, sidePoint1.Y), pixel.V(sidePoint2.X, sidePoint2.Y))
+	b.Body.Push(pixel.V(b.Vertex.X, b.Vertex.Y), pixel.V(leftSidePoint.X, leftSidePoint.Y))
+	b.Body.Push(pixel.V(b.Vertex.X, b.Vertex.Y), pixel.V(rightSidePoint.X, rightSidePoint.Y))
+	b.Body.Push(pixel.V(leftSidePoint.X, leftSidePoint.Y), pixel.V(rightSidePoint.X, rightSidePoint.Y))
 	b.Body.Polygon(0)
-}
-
-func (b *Boid) Move() {
-	// if b.IsCollidingBorder() {
-	// 	b.MovingDirection.X = -b.MovingDirection.X
-	// }
-
-	correctedSpeedX := b.MovingDirection.X * tools.DeltaTime
-	correctedSpeedY := b.MovingDirection.Y * tools.DeltaTime
-
-	b.Origin.X = b.Origin.X + correctedSpeedX
-	b.Origin.Y = b.Origin.Y + correctedSpeedY
-	b.drawBoidBody()
 }
 
 // TO REWORK
