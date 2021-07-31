@@ -1,7 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"github.com/MydroX/goids/internal/window"
+	"github.com/faiface/pixel/pixelgl"
+)
 
 func main() {
-	fmt.Println("hello")
+	pixelgl.Run(window.Run)
 }
