@@ -20,13 +20,13 @@ type Boid struct {
 	Origin          *tools.Coordinates
 	Vertex          *tools.Coordinates
 	Angle           float64 // Angle are saved in radians
-	Speed           uint8
+	Speed           uint16
 }
 
 func (b *Boid) construct(originX float64, originY float64, angle float64) {
 	b.Width = 16
 	b.Height = 20
-	b.Speed = 80
+	b.Speed = 200
 
 	b.Origin = &tools.Coordinates{}
 	b.Origin.X = originX
@@ -73,21 +73,6 @@ func (b *Boid) drawBoidBody() {
 	b.Body.Push(pixel.V(leftSidePoint.X, leftSidePoint.Y), pixel.V(rightSidePoint.X, rightSidePoint.Y))
 	b.Body.Polygon(0)
 }
-
-// TO REWORK
-//
-// func (b *Boid) IsCollidingBorder() bool {
-// 	//Get triangle vertex
-// 	vertex := tools.Coordinates{
-// 		X: b.Origin.X + b.Width,
-// 		Y: b.Origin.Y + (b.Height / 2),
-// 	}
-
-// 	if vertex.X > borders.WindowWidth-borders.BordersWidth || vertex.X < borders.BordersWidth {
-// 		return true
-// 	}
-// 	return false
-// }
 
 func Generator(boidsNumber int16) []Boid {
 	boids := make([]Boid, boidsNumber)

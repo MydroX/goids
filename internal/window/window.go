@@ -45,9 +45,10 @@ func Run() {
 		boid.Body.Draw(canvas)
 
 		// Move 1st boid
-		boid.Move()
+		boid.MoveForward()
 
 		win.Update()
+		// win.SetClosed(true)
 		<-fps.C
 	}
 }
