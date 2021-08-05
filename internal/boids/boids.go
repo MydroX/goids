@@ -46,7 +46,7 @@ func (b *Boid) construct(originX float64, originY float64, angle float64) {
 	b.Vertex = trig.FindPointFromPoint(b.Origin, b.TravelAngle, b.Height)
 }
 
-func New(x float64, y float64, angle float64, travelAngleDirection bool) Boid {
+func New(x float64, y float64, angle float64, travelAngleDirection bool) *Boid {
 	b := Boid{}
 
 	// Construct
@@ -63,7 +63,7 @@ func New(x float64, y float64, angle float64, travelAngleDirection bool) Boid {
 
 	//Position
 	b.drawBoidBody()
-	return b
+	return &b
 }
 
 func (b *Boid) GetSidePoints() (leftPoint, rightPoint *tools.Coordinates) {
@@ -83,8 +83,8 @@ func (b *Boid) drawBoidBody() {
 	b.Body.Polygon(0)
 }
 
-func Generator(boidsNumber int16) []Boid {
-	boids := make([]Boid, boidsNumber)
+func Generator(boidsNumber int16) []*Boid {
+	boids := make([]*Boid, boidsNumber)
 	seed := time.Now().UnixNano()
 	rand.Seed(seed)
 
@@ -104,4 +104,8 @@ func Generator(boidsNumber int16) []Boid {
 		boids[i] = New(float64(x), float64(y), angleRad, travelAngleDirection)
 	}
 	return boids
+}
+
+func (b *Boid) Live() {
+	b.MoveForward()
 }
